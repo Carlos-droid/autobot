@@ -1,0 +1,29 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+.pytest_cache/
+.coverage
+htmlcov/
+
+# Environments
+.env
+.venv
+env/
+venv/
+ENV/
+
+# Project specific
+memory/
+docs/plans/
+report.json
+calculator.py
+operations.py
+tests/test_operations.py
+experiments/
+exp_*/
+
+# Node
+node_modules/
+.node/
+package-lock.json
