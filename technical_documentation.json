@@ -1,0 +1,91 @@
+{
+  "project_name": "Autonomous Research Swarm (AutoResearch)",
+  "version": "2.0",
+  "current_state": "Functional prototype with local persistent memory. Agents execute autonomously in a Builder/Fixer dynamic driven by robustness metrics. The system maintains an episodic memory across sessions and generates telemetry graphs.",
+  "environment": {
+    "os": "Windows",
+    "python_version": "3.13",
+    "execution_mode": "Local / CLI"
+  },
+  "dependencies": [
+    "pytest (for running test suites and extracting pass rates)",
+    "pytest-json-report (for structured test results)",
+    "requests (for HTTP communication with local Ollama API)",
+    "matplotlib (for plotting telemetry graphs)",
+    "ollama (local inference engine running qwen2.5-coder:7b or similar)"
+  ],
+  "architecture": {
+    "description": "A single-agent orchestrator that switches personas based on code quality metrics. It uses a read-eval-propose-test loop.",
+    "system_graph_mermaid": "graph TD\n    A[main loop] --> B{Load Memory}\n    B --> C[Evaluate Baseline]\n    C --> D{Decide Role}\n    D -- Robustness >= 0.7 --> E[Builder Persona]\n    D -- Robustness < 0.7 --> F[Fixer Persona]\n    E --> G[LLM Proposal]\n    F --> G\n    G --> H[Parse JSON & Clean Newlines]\n    H --> I[Write to Disk]\n    I --> J[Run Pytest]\n    J --> K[Calculate Robustness]\n    K --> L{Acceptance Rules}\n    L -- Pass --> M[Save Snapshot & Append Episode]\n    L -- Fail --> N[Revert Files & Log Semantic Error]\n    M --> O[Save Memory JSON]\n    N --> O\n    O --> D"
+  },
+  "logic": [
+    "1. Boot: Ensure files exist and load persistent memory (swarm_memory.json).",
+    "2. Baseline: Calculate initial pass_rate and robustness_score.",
+    "3. Role Decision: If robustness < 0.7, agent becomes 'Fixer' (adds try/except, typing). Otherwise, 'Builder' (adds new math operations).",
+    "4. Prompting: LLM receives current state, test failures, done ops, and source code.",
+    "5. Generation: LLM proposes new operations.py and test_basic.py contents via JSON tools.",
+    "6. Execution: The script writes the files and runs pytest.",
+    "7. Evaluation: Strict acceptance rules. Builders must pass tests. Fixers must increase robustness by 0.05 without breaking tests.",
+    "8. Persistence: Successes are logged as episodes in swarm_memory.json. Failures are stored semantically to avoid repetition."
+  ],
+  "files": {
+    "single_agent_swarm_2.py": "Main orchestrator script.",
+    "core/operations.py": "Target code file modified by the agent.",
+    "core/calculator.py": "Auto-generated file exposing operations as a string calculator.",
+    "tests/test_basic.py": "Target test file modified by the agent.",
+    "logs/swarm_memory.json": "Persistent state across executions.",
+    "logs/agent_memory.log": "Human-readable trace of LLM reasoning and decisions.",
+    "logs/pytest_debug.log": "Full stdout/stderr of pytest runs for debugging.",
+    "experiments/": "Snapshots of every accepted code version."
+  },
+  "functions_definition": [
+    {
+      "name": "load_memory(base_score)",
+      "purpose": "Deserializes state from swarm_memory.json to cure agent amnesia across sessions. Synchronizes base score."
+    },
+    {
+      "name": "save_memory(state)",
+      "purpose": "Serializes the current state dictionary to JSON on disk."
+    },
+    {
+      "name": "ensure_files()",
+      "purpose": "Bootstraps the project structure, creating initial directories, empty logs, and base code files if missing."
+    },
+    {
+      "name": "regenerate_calculator()",
+      "purpose": "Parses operations.py and dynamically creates a calculator.py wrapper mapping operation strings to functions."
+    },
+    {
+      "name": "robustness_score()",
+      "purpose": "AST-based static analyzer. Calculates a 0.0-1.0 score based on presence of try/except, type hints, isinstance, and if-raise guards."
+    },
+    {
+      "name": "run_tests()",
+      "purpose": "Executes pytest. Captures full logs for debugging, and returns the pass rate along with the semantic failure traceback."
+    },
+    {
+      "name": "save_snapshot(fn, rate, robust, itype)",
+      "purpose": "Backs up the accepted operations.py and test_basic.py into an experiments/exp_NNN folder."
+    },
+    {
+      "name": "_decide_role()",
+      "purpose": "Determines if the LLM should act as a Builder (new functions) or Fixer (robustness) based on the ROBUSTNESS_FIXER_THRESHOLD."
+    },
+    {
+      "name": "_failure_memory()",
+      "purpose": "Extracts the latest test tracebacks for failed functions to inject into the LLM prompt, preventing blind loops."
+    },
+    {
+      "name": "ask(client)",
+      "purpose": "Constructs the dynamic prompt and calls the Ollama (or Anthropic) API to get the tool-use JSON proposal."
+    },
+    {
+      "name": "main()",
+      "purpose": "The core loop. Orchestrates the flow, applies patches, evaluates results, and handles accept/reject logic."
+    },
+    {
+      "name": "plot_results()",
+      "purpose": "Uses matplotlib to read all experiment metadata and generate a telemetry chart of pass_rate, robustness, and score."
+    }
+  ]
+}
