@@ -1,0 +1,15 @@
+.git
+.venv
+node_modules
+__pycache__
+.pytest_cache
+*.pyc
+*.pyo
+*.pyd
+.db
+.ipynb_checkpoints
+logs/
+telemetry/logs/
+legacy/
+claude-code-source-code-main/
+claude-skills/

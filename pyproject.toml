@@ -9,4 +9,9 @@ dependencies = [
     "pytest>=9.0.2",
     "pytest-json-report>=1.5.0",
     "requests>=2.33.1",
+    "crawl4ai>=0.3.5",
+    "duckduckgo-search>=6.0.0",
+    "beautifulsoup4>=4.12.3",
+    "playwright>=1.42.0",
+    "pydantic-ai>=0.0.1",
 ]
